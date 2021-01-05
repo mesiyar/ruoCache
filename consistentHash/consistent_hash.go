@@ -28,7 +28,7 @@ type Hash func(data []byte) uint32
 // map 存储所有的hash keys
 type Map struct {
 	hash     Hash
-	replicas int   // 虚拟节点倍数
+	replicas int   // 虚拟节点倍数 ? 解决数据偏移问题而引入
 	keys     []int // Sorted
 	hashMap  map[int]string
 }
