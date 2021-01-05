@@ -1,6 +1,7 @@
 package ruoCache
 
 import (
+	"log"
 	"ruoCache/lru"
 	"sync"
 )
@@ -21,6 +22,7 @@ func (c *cache) add(key string, value ByteView) {
 		c.lru = lru.New(c.cacheBytes, nil)
 	}
 	c.lru.Add(key, value)
+	log.Printf("add cache key %s value %s", key, value.String())
 }
 
 // 获取缓存

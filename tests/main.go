@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"ruoCache"
 	"net/http"
+	"ruoCache"
 )
 
 var db = map[string]string{
@@ -15,14 +15,7 @@ var db = map[string]string{
 }
 
 func createGroup() *ruoCache.Group {
-	return ruoCache.NewGroup("scores", 2<<10, ruoCache.GetterFunc(
-		func(key string) ([]byte, error) {
-			log.Println("[SlowDB] search key", key)
-			if v, ok := db[key]; ok {
-				return []byte(v), nil
-			}
-			return nil, fmt.Errorf("%s not exist", key)
-		}))
+	return createNewGroup("main")
 }
 
 func startCacheServer(addr string, addrs []string, ruo *ruoCache.Group) {
@@ -42,9 +35,18 @@ func startAPIServer(apiAddr string, ruo *ruoCache.Group) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			w.Header().Set("Content-Type", "application/octet-stream")
+			w.Header().Set("Content-Type", "application/application/json")
 			w.Write(view.ByteSlice())
 
+		}))
+
+	http.Handle("/set", http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			key := r.URL.Query().Get("key")
+			val := r.URL.Query().Get("val")
+			ruo.Set(key, val)
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte("{\"status\":0,\"code\":200, \"msg\":\"success\"}"))
 		}))
 	log.Println("fontend server is running at", apiAddr)
 	log.Fatal(http.ListenAndServe(apiAddr[7:], nil))
@@ -70,9 +72,20 @@ func main() {
 		addrs = append(addrs, v)
 	}
 
-	gee := createGroup()
+	ruo := createGroup()
 	if api {
-		go startAPIServer(apiAddr, gee)
+		go startAPIServer(apiAddr, ruo)
 	}
-	startCacheServer(addrMap[port], []string(addrs), gee)
+	startCacheServer(addrMap[port], []string(addrs), ruo)
+}
+
+func createNewGroup(name string) *ruoCache.Group {
+	return ruoCache.NewGroup(name, 2<<10, ruoCache.GetterFunc(
+		func(key string) ([]byte, error) {
+			log.Println("[SlowDB] search key", key)
+			if v, ok := db[key]; ok {
+				return []byte(v), nil
+			}
+			return nil, fmt.Errorf("%s not exist", key)
+		}))
 }

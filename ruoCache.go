@@ -58,7 +58,7 @@ func (g *Group) getFromPeer(peer PeerGetter, key string) (ByteView, error) {
 
 var (
 	mutex  sync.RWMutex
-	groups = make(map[string]*Group)
+	Groups = make(map[string]*Group)
 )
 
 // 新建一个分组的实例
@@ -77,14 +77,15 @@ func NewGroup(name string, cacheBytes int64, getter Getter) *Group {
 		},
 		loader: &singleflight.Group{},
 	}
-	groups[name] = g
+	Groups[name] = g
+	log.Printf("new Group %s", name)
 	return g
 }
 
 // 获取一个分组
 func GetGroup(name string) *Group {
 	mutex.RLock()
-	g := groups[name]
+	g := Groups[name]
 	mutex.RUnlock()
 	return g
 }
@@ -102,6 +103,12 @@ func (g *Group) Get(key string) (ByteView, error) {
 	// 缓存不存在，则调用 load 方法
 	return g.load(key)
 }
+
+func (g *Group) Set(key , value string)  {
+	v := ByteView{b: cloneBytes([]byte(value))}
+	g.mainCache.add(key, v)
+}
+
 func (g *Group) getLocally(key string) (ByteView, error) {
 	bytes, err := g.getter.Get(key)
 	if err != nil {
