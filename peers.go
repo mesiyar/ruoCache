@@ -1,5 +1,7 @@
 package ruoCache
 
+import pb"ruoCache/ruoCachePb"
+
 // 节点选择器
 type PeerPicker interface {
 	//根据传入的 key 选择相应节点
@@ -9,5 +11,5 @@ type PeerPicker interface {
 
 type PeerGetter interface {
 	// 从对应 group 查找缓存值
-	Get(group, key string) ([]byte, error)
+	Get(in *pb.Request, out *pb.Response) (error)
 }

@@ -3,6 +3,7 @@ package ruoCache
 import (
 	"fmt"
 	"log"
+	pb "ruoCache/ruoCachePb"
 	"ruoCache/singleflight"
 	"sync"
 )
@@ -46,11 +47,13 @@ func (g *Group) load(key string) (value ByteView, err error) {
 }
 
 func (g *Group) getFromPeer(peer PeerGetter, key string) (ByteView, error) {
-	bytes, err := peer.Get(g.name, key)
+	req := &pb.Request{Group: g.name, Key: key}
+	res := &pb.Response{}
+	err := peer.Get(req, res)
 	if err != nil {
 		return ByteView{}, err
 	}
-	return ByteView{b: bytes}, nil
+	return ByteView{b: res.Value}, nil
 }
 
 var (
@@ -72,7 +75,7 @@ func NewGroup(name string, cacheBytes int64, getter Getter) *Group {
 		mainCache: cache{
 			cacheBytes: cacheBytes,
 		},
-		loader:    &singleflight.Group{},
+		loader: &singleflight.Group{},
 	}
 	groups[name] = g
 	return g
