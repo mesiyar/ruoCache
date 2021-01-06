@@ -27,10 +27,10 @@ func startCacheServer(addr string, addrs []string, ruo *ruoCache.Group) {
 }
 
 func startAPIServer(apiAddr string) {
-	http.Handle("/api", http.HandlerFunc(
+	http.Handle("/get", http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			key := r.URL.Query().Get("key")
-			group := r.URL.Query().Get("key")
+			group := r.URL.Query().Get("group")
 			if group == "" {
 				group = "main"
 			}
@@ -41,14 +41,13 @@ func startAPIServer(apiAddr string) {
 			}
 			w.Header().Set("Content-Type", "application/application/json")
 			w.Write(view.ByteSlice())
-
 		}))
 
 	http.Handle("/set", http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			key := r.URL.Query().Get("key")
 			val := r.URL.Query().Get("val")
-			group := r.URL.Query().Get("key")
+			group := r.URL.Query().Get("group")
 			if group == "" {
 				group = "main"
 			}

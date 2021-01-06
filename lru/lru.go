@@ -1,6 +1,9 @@
 package lru
 
-import "container/list"
+import (
+	"container/list"
+	"log"
+)
 
 type Cache struct {
 	maxBytes int64 //允许使用的最大内存，
@@ -66,14 +69,17 @@ func (c *Cache) Add(key string, value Value) {
 		c.ll.MoveToFront(ele)
 		kv := ele.Value.(*entry)
 		c.nbytes += int64(value.Len()) - int64(kv.value.Len())
+		log.Printf("key %s is exists , update to %s", key, value)
 		kv.value = value
 	} else {
 		ele := c.ll.PushFront(&entry{key, value})
 		c.cache[key] = ele
 		c.nbytes += int64(len(key)) + int64(value.Len())
 	}
+	log.Printf("current memory %d max memory %d", c.nbytes, c.maxBytes)
 	// 当内存不足时, 检测并移出没有使用的
 	for c.maxBytes != 0 && c.maxBytes < c.nbytes {
+		log.Printf("current memory %d  > max memory %d clear the Least Recently Used", c.nbytes, c.maxBytes)
 		c.RemoveOldest()
 	}
 }
